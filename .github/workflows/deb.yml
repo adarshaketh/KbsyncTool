@@ -24,7 +24,7 @@ jobs:
           rm -f packages/*
           make package FINALPACKAGE=1
       - name: Publish artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4.3.0
         with:
           name: com.darwindev.kbsynctool
-          path: ${{ github.workspace }}/packages/*.deb
+          path: ${{ github.workspace }}/main/packages/*.deb
