@@ -9,7 +9,6 @@
 #import <CaptainHook/CaptainHook.h>
 #import <Foundation/Foundation.h>
 #import <libSandy.h>
-#import <rocketbootstrap/rocketbootstrap.h>
 #import <rootless.h>
 
 @interface MicroPaymentQueueRequest : NSObject
