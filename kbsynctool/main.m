@@ -10,7 +10,7 @@
 
 static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
 {
-    CFMessagePortRef remotePort = (CFMessagePortRef)rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
+    CFMessagePortRef remotePort = rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
     if (!remotePort) {
 		fprintf(stderr, "no remote port found\n");
 		return [NSDictionary dictionary];

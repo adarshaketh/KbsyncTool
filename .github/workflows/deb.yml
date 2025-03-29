@@ -21,6 +21,9 @@ jobs:
 
       - name: Build package
         run: |
+          cp -r include/rocketbootstrap $THEOS/include/rocketbootstrap
+          cp -r include/LightMessaging $THEOS/include/LightMessaging
+          cp -f lib/librocketbootstrap.dylib $THEOS/lib/librocketbootstrap.dylib
           rm -f packages/*
           make package FINALPACKAGE=1
 

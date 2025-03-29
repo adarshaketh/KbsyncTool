@@ -9,8 +9,8 @@
 #import <CaptainHook/CaptainHook.h>
 #import <Foundation/Foundation.h>
 #import <libSandy.h>
-#import <rocketbootstrap/rocketbootstrap.h>
 #import <rootless.h>
+#import <rocketbootstrap/rocketbootstrap.h>
 
 @interface MicroPaymentQueueRequest : NSObject
 @property(retain) NSNumber *userIdentifier;
@@ -365,12 +365,12 @@ CHConstructor {
               }
           }
 
-          kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port");
+          kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port2");
           if (unlockRet != KERN_SUCCESS) {
-              os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port: %d", unlockRet);
+              os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port2: %d", unlockRet);
           }
 
-          localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port"), Callback, nil, nil);
+          localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port2"), Callback, nil, nil);
         });
 
         if (!localPort) {
