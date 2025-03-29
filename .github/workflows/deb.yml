@@ -26,7 +26,8 @@ jobs:
           cp -f lib/librocketbootstrap.dylib $THEOS/lib/librocketbootstrap.dylib
           rm -f packages/*
           cp -r layout/Library ./
-          cp -f DEBIAN/control ./
+          cp -f layout/Library/MobileSubstrate/DynamicLibraries/KbsyncTweak.plist ./
+          cp -f layout/DEBIAN/control ./
           make package FINALPACKAGE=1
 
       - name: Publish artifact
