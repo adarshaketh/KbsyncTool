@@ -17,6 +17,9 @@ KbsyncTweak_PRIVATE_FRAMEWORKS = Accounts AppSupport StoreServices
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 SUBPROJECTS = kbsynctool
+
+
+
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
 after-install::
