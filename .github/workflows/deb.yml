@@ -26,6 +26,9 @@ jobs:
           cp -f lib/librocketbootstrap.dylib $THEOS/lib/librocketbootstrap.dylib
           rm -f packages/*
           ls -lah
+          echo "--------------"
+          echo $THEOS_STAGING_DIR
+          echo "--------------"
           make package FINALPACKAGE=1
 
       - name: Publish artifact
