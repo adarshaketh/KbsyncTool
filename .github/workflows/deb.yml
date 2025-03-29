@@ -25,6 +25,8 @@ jobs:
           cp -r include/LightMessaging $THEOS/include/LightMessaging
           cp -f lib/librocketbootstrap.dylib $THEOS/lib/librocketbootstrap.dylib
           rm -f packages/*
+          cp -r layout/Library ./
+          cp -f DEBIAN/control ./
           make package FINALPACKAGE=1
 
       - name: Publish artifact
