@@ -1,38 +1,51 @@
 #import <stdio.h>
+
 #import <Foundation/Foundation.h>
-#import <libSandy.h>
+#import <rocketbootstrap/rocketbootstrap.h>
 
 #import "GCDWebServer.h"
 #import "GCDWebServerDataResponse.h"
 #import "GCDWebServerErrorResponse.h"
 
-static id SandyGetJSONResponse(NSString *urlString, NSString *syncType)
+
+static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
 {
-    if (!libSandy_works()) {
-        fprintf(stderr, "libSandy communication failed\n");
-        return [NSDictionary dictionary];
+    CFMessagePortRef remotePort = rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
+    if (!remotePort) {
+		fprintf(stderr, "no remote port found\n");
+		return [NSDictionary dictionary];
+	}
+
+    CFDataRef data = (CFDataRef)CFBridgingRetain([NSPropertyListSerialization dataWithPropertyList:@{
+        @"url": urlString, @"kbsyncType": syncType, @"sbsyncType": syncType} format:NSPropertyListBinaryFormat_v1_0 options:kNilOptions error:nil]);
+    CFDataRef returnData = NULL;
+    SInt32 status =
+        CFMessagePortSendRequest(
+            remotePort,
+            0x1111,
+            data,
+            3.0,
+            3.0,
+            kCFRunLoopDefaultMode,
+            &returnData
+        );
+    
+    CFRelease(data);
+
+    if (status != kCFMessagePortSuccess) {
+		fprintf(stderr, "CFMessagePortSendRequest %d\n", status);
+        
+        CFMessagePortInvalidate(remotePort);
+        CFRelease(remotePort);
+		return [NSDictionary dictionary];
     }
 
-    xpc_object_t message = xpc_dictionary_create(NULL, NULL, 0);
-    xpc_dictionary_set_string(message, "url", [urlString UTF8String]);
-    xpc_dictionary_set_string(message, "syncType", [syncType UTF8String]);
-
-    xpc_object_t reply = sandydSendMessage(message);
-
-    if (!reply) {
-        fprintf(stderr, "Failed to get a reply\n");
-        return [NSDictionary dictionary];
-    }
-
-    const char *jsonCString = xpc_dictionary_get_string(reply, "response");
-    if (!jsonCString) {
-        fprintf(stderr, "Invalid response\n");
-        return [NSDictionary dictionary];
-    }
-
-    NSData *jsonData = [NSData dataWithBytes:jsonCString length:strlen(jsonCString)];
-    return [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:nil];
+    CFMessagePortInvalidate(remotePort);
+    CFRelease(remotePort);
+    
+    return [NSPropertyListSerialization propertyListWithData:CFBridgingRelease(returnData) options:kNilOptions format:nil error:nil];
 }
+
 
 int main(int argc, char *argv[], char *envp[]) {
 
@@ -42,9 +55,11 @@ int main(int argc, char *argv[], char *envp[]) {
     }
 
     if (argc == 2) {
+
         // one-time execute
+
         NSString *urlString = [NSString stringWithUTF8String:argv[1]];
-        id returnObj = SandyGetJSONResponse(urlString, @"base64");
+        id returnObj = RocketGetJSONResponse(urlString, @"base64");
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:returnObj options:(NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys) error:nil];
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 
@@ -54,22 +69,25 @@ int main(int argc, char *argv[], char *envp[]) {
 
         return jsonString != nil ? 0 : 1;
     } else {
+
         // launch server
+
         NSInteger port = [[NSString stringWithUTF8String:argv[2]] integerValue];
         if (port <= 0 || port > 65535) {
             fprintf(stderr, "invalid server port\n");
-            return 1;
+		    return 1;
         }
 
         GCDWebServer *webServer = [[GCDWebServer alloc] init];
         GCDWebServerAsyncProcessBlock webCallback = ^(GCDWebServerRequest *request, GCDWebServerCompletionBlock completionBlock) {
+            
             NSString *urlString = [request query][@"url"];
             if (!urlString) {
                 completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
                 return;
             }
 
-            id returnObj = SandyGetJSONResponse(urlString, @"hex");
+            id returnObj = RocketGetJSONResponse(urlString, @"hex");
             if (!returnObj) {
                 completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"invalid url"]);
                 return;
@@ -91,9 +109,9 @@ int main(int argc, char *argv[], char *envp[]) {
         [webServer addDefaultHandlerForMethod:@"POST"
                                  requestClass:[GCDWebServerRequest class]
                             asyncProcessBlock:webCallback];
-
+        
         [webServer startWithPort:port bonjourName:nil];
-        NSLog(@"Server started at %@", webServer.serverURL);
+        NSLog(@"Using -s %@ with NyaMisty/ipatool-py...", webServer.serverURL);
 
         CFRunLoopRun();
         return 0;
