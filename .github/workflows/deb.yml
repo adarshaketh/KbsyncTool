@@ -33,5 +33,5 @@ jobs:
       - name: Publish artifact
         uses: actions/upload-artifact@v4.3.0
         with:
-          name: com.darwindev.kbsynctool
-          path: ${{ github.workspace }}/main/packages/*.deb
+          name: dev.und3fy.kbsync
+          path: ${{ github.workspace }}/packages/*.deb
