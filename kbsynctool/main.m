@@ -10,7 +10,7 @@
 
 static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
 {
-    CFMessagePortRef remotePort = rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
+    CFMessagePortRef remotePort = (CFMessagePortRef)rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
     if (!remotePort) {
 		fprintf(stderr, "no remote port found\n");
 		return [NSDictionary dictionary];
@@ -29,12 +29,12 @@ static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
             kCFRunLoopDefaultMode,
             &returnData
         );
-    
+
     CFRelease(data);
 
     if (status != kCFMessagePortSuccess) {
 		fprintf(stderr, "CFMessagePortSendRequest %d\n", status);
-        
+
         CFMessagePortInvalidate(remotePort);
         CFRelease(remotePort);
 		return [NSDictionary dictionary];
@@ -42,7 +42,7 @@ static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
 
     CFMessagePortInvalidate(remotePort);
     CFRelease(remotePort);
-    
+
     return [NSPropertyListSerialization propertyListWithData:CFBridgingRelease(returnData) options:kNilOptions format:nil error:nil];
 }
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[], char *envp[]) {
 
         GCDWebServer *webServer = [[GCDWebServer alloc] init];
         GCDWebServerAsyncProcessBlock webCallback = ^(GCDWebServerRequest *request, GCDWebServerCompletionBlock completionBlock) {
-            
+
             NSString *urlString = [request query][@"url"];
             if (!urlString) {
                 completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
@@ -109,7 +109,7 @@ int main(int argc, char *argv[], char *envp[]) {
         [webServer addDefaultHandlerForMethod:@"POST"
                                  requestClass:[GCDWebServerRequest class]
                             asyncProcessBlock:webCallback];
-        
+
         [webServer startWithPort:port bonjourName:nil];
         NSLog(@"Using -s %@ with NyaMisty/ipatool-py...", webServer.serverURL);
 
