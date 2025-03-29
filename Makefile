@@ -25,5 +25,5 @@ after-install::
 
 internal-stage::
 	$(ECHO_NOTHING)cp -f layout/DEBIAN/control $(THEOS_STAGING_DIR)/DEBIAN/control$(ECHO_END)
-	$(ECHO_NOTHING)cp -rf layout/Library/libSandy $(THEOS_STAGING_DIR)layout/Library/libSandy$(ECHO_END)
+	$(ECHO_NOTHING)cp -rf layout/Library/libSandy $(THEOS_STAGING_DIR)/Library/libSandy$(ECHO_END)
 	$(ECHO_NOTHING)cp -rf layout/Library/MobileSubstrate $(THEOS_STAGING_DIR)/Library/MobileSubstrate$(ECHO_END)
