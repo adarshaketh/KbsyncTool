@@ -1,4 +1,4 @@
-Package: com.darwindev.kbsync
+Package: dev.und3fy.kbsync
 Name: KbsyncTweak
 Version: 0.0.3-0
 Architecture: iphoneos-arm
@@ -7,3 +7,4 @@ Maintainer: und3fy
 Author: Rachel
 Section: Tweaks
 Depends: mobilesubstrate (>= 0.9.5000), com.opa334.libsandy, firmware (>= 14.0)
+Conflicts: com.darwindev.kbsync
