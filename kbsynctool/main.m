@@ -97,6 +97,8 @@ int main(int argc, char *argv[], char *envp[]) {
         // one-time execute
 
         NSString *urlString = [NSString stringWithUTF8String:argv[1]];
+        printf("Try fetch data for %s\n", [urlString UTF8String]);
+
         id returnObj = RocketGetJSONResponse(urlString, @"base64");
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:returnObj options:(NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys) error:nil];
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
