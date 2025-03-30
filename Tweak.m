@@ -395,42 +395,47 @@ static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef dat
     return nil;
 }
 
-CHConstructor {
+// CHConstructor {
 
-    if ([[[NSProcessInfo processInfo] processName] isEqualToString:@"itunesstored"]) {
+//     if ([[[NSProcessInfo processInfo] processName] isEqualToString:@"itunesstored"]) {
 
-        static CFMessagePortRef localPort = nil;
-        static dispatch_once_t onceToken;
+%ctor {
+    os_log_info(OS_LOG_DEFAULT, "KbsyncTool loaded");
 
-        dispatch_once(&onceToken, ^{
-          void *sandyHandle = dlopen(ROOT_PATH("/usr/lib/libsandy.dylib"), RTLD_LAZY);
-          if (sandyHandle) {
-              os_log_info(OS_LOG_DEFAULT, "libSandy loaded");
-              int (*__dyn_libSandy_applyProfile)(const char *profileName) =
-                  (int (*)(const char *))dlsym(sandyHandle, "libSandy_applyProfile");
-              if (__dyn_libSandy_applyProfile) {
-                  __dyn_libSandy_applyProfile("KbsyncTool");
-              }
+    static CFMessagePortRef localPort = nil;
+    static dispatch_once_t onceToken;
+
+    dispatch_once(&onceToken, ^{
+      void *sandyHandle = dlopen(ROOT_PATH("/usr/lib/libsandy.dylib"), RTLD_LAZY);
+      if (sandyHandle) {
+          os_log_info(OS_LOG_DEFAULT, "libSandy loaded");
+          int (*__dyn_libSandy_applyProfile)(const char *profileName) =
+              (int (*)(const char *))dlsym(sandyHandle, "libSandy_applyProfile");
+          if (__dyn_libSandy_applyProfile) {
+              __dyn_libSandy_applyProfile("KbsyncTool");
           }
+      }
 
-          kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port");
-          if (unlockRet != KERN_SUCCESS) {
-              os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port: %d", unlockRet);
-          }
+      kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port");
+      if (unlockRet != KERN_SUCCESS) {
+          os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port: %d", unlockRet);
+      }
 
-          localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port"), Callback, nil, nil);
-        });
+      localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port"), Callback, nil, nil);
+    });
 
-        if (!localPort) {
-            return;
-        }
-
-        os_log_info(OS_LOG_DEFAULT, "Registering com.darwindev.kbsync.port: %p", localPort);
-
-        CFRunLoopSourceRef runLoopSource = CFMessagePortCreateRunLoopSource(kCFAllocatorDefault, localPort, 0);
-
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
-
-        rocketbootstrap_cfmessageportexposelocal(localPort);
+    if (!localPort) {
+        return;
     }
+
+    os_log_info(OS_LOG_DEFAULT, "Registering com.darwindev.kbsync.port: %p", localPort);
+
+    CFRunLoopSourceRef runLoopSource = CFMessagePortCreateRunLoopSource(kCFAllocatorDefault, localPort, 0);
+
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
+
+    rocketbootstrap_cfmessageportexposelocal(localPort);
 }
+
+//     }
+// }
