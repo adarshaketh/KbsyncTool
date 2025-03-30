@@ -425,6 +425,7 @@ CHConstructor {
     });
 
     if (!localPort) {
+        os_log_error(OS_LOG_DEFAULT, "Missing localPort ---------------------------------");
         return;
     }
 
