@@ -19,9 +19,3 @@ include $(THEOS_MAKE_PATH)/tweak.mk
 SUBPROJECTS = kbsynctool
 
 include $(THEOS_MAKE_PATH)/aggregate.mk
-
-after-install::
-	install.exec "killall -9 AppStore; killall -9 itunesstored; killall -9 appstored 2>/dev/null &"
-
-# internal-stage::
-# 	$(ECHO_NOTHING)cp -rf layout/Library/libSandy $(THEOS_STAGING_DIR)/Library/libSandy$(ECHO_END)
