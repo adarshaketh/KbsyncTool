@@ -46,6 +46,44 @@ static id RocketGetJSONResponse(NSString *urlString, NSString *syncType)
     return [NSPropertyListSerialization propertyListWithData:CFBridgingRelease(returnData) options:kNilOptions format:nil error:nil];
 }
 
+static id RocketGetJSONResponse2(NSData *signBody, NSNumber *mescalType, NSDictionary *bag)
+{
+    CFMessagePortRef remotePort = rocketbootstrap_cfmessageportcreateremote(NULL, CFSTR("com.darwindev.kbsync.port"));
+    if (!remotePort) {
+		fprintf(stderr, "no remote port found\n");
+		return [NSDictionary dictionary];
+	}
+
+    CFDataRef data = (CFDataRef)CFBridgingRetain([NSPropertyListSerialization dataWithPropertyList:@{
+        @"body": signBody, @"mescalType": mescalType, @"bag": bag} format:NSPropertyListBinaryFormat_v1_0 options:kNilOptions error:nil]);
+    CFDataRef returnData = NULL;
+    SInt32 status =
+        CFMessagePortSendRequest(
+            remotePort,
+            0x2222,
+            data,
+            3.0,
+            3.0,
+            kCFRunLoopDefaultMode,
+            &returnData
+        );
+
+    CFRelease(data);
+
+    if (status != kCFMessagePortSuccess) {
+		fprintf(stderr, "CFMessagePortSendRequest %d\n", status);
+
+        CFMessagePortInvalidate(remotePort);
+        CFRelease(remotePort);
+		return [NSDictionary dictionary];
+    }
+
+    CFMessagePortInvalidate(remotePort);
+    CFRelease(remotePort);
+
+    return [NSPropertyListSerialization propertyListWithData:CFBridgingRelease(returnData) options:kNilOptions format:nil error:nil];
+}
+
 
 int main(int argc, char *argv[], char *envp[]) {
 
@@ -81,26 +119,41 @@ int main(int argc, char *argv[], char *envp[]) {
         GCDWebServer *webServer = [[GCDWebServer alloc] init];
         GCDWebServerAsyncProcessBlock webCallback = ^(GCDWebServerRequest *request, GCDWebServerCompletionBlock completionBlock) {
 
-            NSString *urlString = [request query][@"url"];
-            if (!urlString) {
-                completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
-                return;
-            }
+          id returnObj = nil;
+          if ([[[request URL] path] isEqualToString:@"/sign"]) {
+              NSString *bodyString = [request query][@"body"];
+              NSData *body = [[NSData alloc] initWithBase64EncodedString:bodyString options:0];
 
-            id returnObj = RocketGetJSONResponse(urlString, @"hex");
-            if (!returnObj) {
-                completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"invalid url"]);
-                return;
-            }
+              NSString *mescalTypeString = [request query][@"mescalType"];
+              int mescalType = [mescalTypeString intValue];
 
-            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:returnObj options:(NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys) error:nil];
-            NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+              NSString *bagJsonString = [request query][@"bagJson"];
+              NSData *bagJsonData = [bagJsonString dataUsingEncoding:NSUTF8StringEncoding];
+              NSError *error = nil;
+              NSDictionary *bagJson = [NSJSONSerialization JSONObjectWithData:bagJsonData options:0 error:&error];
+              if (error != nil) {
+                  completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid bag json"]);
+                  return;
+              }
 
-            if (jsonString) {
-                NSLog(@"%@", jsonString);
-            }
+              returnObj = RocketGetJSONResponse2(body, @(mescalType), bagJson);
+              if (!returnObj) {
+                  completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"server error"]);
+                  return;
+              }
+          } else {
+              NSString *urlString = [request query][@"url"];
+              if (!urlString) {
+                  completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
+                  return;
+              }
 
-            completionBlock([GCDWebServerDataResponse responseWithData:jsonData contentType:@"application/json"]);
+              returnObj = RocketGetJSONResponse(urlString, @"hex");
+              if (!returnObj) {
+                  completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"invalid url"]);
+                  return;
+              }
+          }
         };
 
         [webServer addDefaultHandlerForMethod:@"GET"

@@ -89,6 +89,11 @@
 - (SSVFairPlaySubscriptionController *)_fairPlaySubscriptionController;
 @end
 
+@interface AMSMescalSession : NSObject
++ (AMSMescalSession *)sessionWithType:(int)mescalType;
+- (NSData *)signData:(NSData *)data bag:(NSDictionary *)bag error:(NSError **)err;
+@end
+
 static inline char itoh(int i) {
     if (i > 9)
         return 'A' + (i - 10);
@@ -111,7 +116,7 @@ static NSString *NSDataToHex(NSData *data) {
     return [[NSString alloc] initWithBytesNoCopy:buf length:len * 2 encoding:NSASCIIStringEncoding freeWhenDone:YES];
 }
 
-static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef data, void *info) {
+static CFDataRef Callback_handleHeaders(CFMessagePortRef port, SInt32 messageID, CFDataRef data, void *info) {
     // ...
 
     NSDictionary *args = [NSPropertyListSerialization propertyListWithData:(__bridge NSData *)data
@@ -344,6 +349,49 @@ static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef dat
     }
 
     NSLog(@"kbsync_result_callback %@", @"error, you should download something in the App Store to init kbsync.");
+    return nil;
+}
+
+static CFDataRef Callback_handleSign(CFMessagePortRef port, SInt32 messageID, CFDataRef data, void *info) {
+    // ...
+
+    NSDictionary *args = [NSPropertyListSerialization propertyListWithData:(__bridge NSData *)data
+                                                                   options:kNilOptions
+                                                                    format:nil
+                                                                     error:nil];
+
+    NSData *signbody = args[@"body"];
+    NSNumber *mescalType = args[@"mescalType"]; // 1 or 2
+    NSDictionary *bagDict = args[@"bag"]; // 1 or 2
+
+
+    NSMutableDictionary *returnDict = [NSMutableDictionary dictionary];
+
+    NSLog(@"Start to calc signSap...");
+    AMSMescalSession *session = [NSClassFromString(@"AMSMescalSession") sessionWithType:[mescalType intValue]];
+
+    NSError *retError = nil;
+    NSData *signature = [session signData:signbody bag:bagDict error:&retError];
+    if (retError != nil) {
+        NSLog(@"kbsync_result_callback cannot call [AMSMescalSession signData]: %@", retError);
+        return nil;
+    }
+    NSString *signatureString = NSDataToHex(signature);
+
+    returnDict[@"signature"] = signatureString;
+    return (CFDataRef)CFBridgingRetain([NSPropertyListSerialization
+            dataWithPropertyList:returnDict
+                          format:NSPropertyListBinaryFormat_v1_0
+                         options:kNilOptions
+                           error:nil]);
+}
+
+static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef data, void *info) {
+    if (messageID == 0x1111) { // kbsynctool's default messageID
+        return Callback_handleHeaders(port, messageID, data, info);
+    } else if (messageID == 0x2222) { // kbsynctool's signature messageID
+        return Callback_handleSign(port, messageID, data, info);
+    }
     return nil;
 }
 
