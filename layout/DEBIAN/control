@@ -1,7 +1,7 @@
 Package: dev.und3fy.kbsync
 Name: KbsyncTweak
 Version: 0.0.3-0
-Architecture: iphoneos-arm
+Architecture: iphoneos-arm64
 Description: An awesome MobileSubstrate tweak!
 Maintainer: und3fy
 Author: Rachel
