@@ -10,6 +10,9 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        provider: [rootful, rootless]
 
     steps:
       - uses: actions/checkout@v2
@@ -28,10 +31,15 @@ jobs:
           cp -r layout/Library ./
           cp -f layout/Library/MobileSubstrate/DynamicLibraries/KbsyncTweak.plist ./
           cp -f layout/DEBIAN/control ./
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          if [[ ${{matrix.provider}} == rootless ]]; then
+            sed -i'' -e 's/iphoneos-arm/iphoneos-arm64/g' control
+            make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          else
+            make package FINALPACKAGE=1
+          fi
 
       - name: Publish artifact
         uses: actions/upload-artifact@v4.3.0
         with:
-          name: dev.und3fy.kbsync
+          name: kbsync-${{matrix.provider}}
           path: ${{ github.workspace }}/packages/*.deb
