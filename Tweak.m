@@ -413,12 +413,12 @@ CHConstructor {
               }
           }
 
-          kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port2");
+          kern_return_t unlockRet = rocketbootstrap_unlock("com.darwindev.kbsync.port");
           if (unlockRet != KERN_SUCCESS) {
-              os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port2: %d", unlockRet);
+              os_log_error(OS_LOG_DEFAULT, "Failed to unlock com.darwindev.kbsync.port: %d", unlockRet);
           }
 
-          localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port2"), Callback, nil, nil);
+          localPort = CFMessagePortCreateLocal(nil, CFSTR("com.darwindev.kbsync.port"), Callback, nil, nil);
         });
 
         if (!localPort) {

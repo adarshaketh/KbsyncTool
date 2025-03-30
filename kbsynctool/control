@@ -1,7 +1,7 @@
 Package: com.darwindev.kbsynctool
 Name: KbsyncTool
 Version: 0.0.2
-Architecture: iphoneos-arm
+Architecture: iphoneos-arm64
 Description: An awesome tool of some sort!!
 Maintainer: und3fy
 Author: Rachel
