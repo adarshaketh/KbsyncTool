@@ -6,7 +6,7 @@
 
 #import "pac_helper.h"
 #import <Accounts/Accounts.h>
-#import <CaptainHook/CaptainHook.h>
+// #import <CaptainHook/CaptainHook.h>
 #import <Foundation/Foundation.h>
 #import <libSandy.h>
 #import <rootless.h>
