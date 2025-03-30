@@ -6,7 +6,7 @@
 
 #import "pac_helper.h"
 #import <Accounts/Accounts.h>
-// #import <CaptainHook/CaptainHook.h>
+#import <CaptainHook/CaptainHook.h>
 #import <Foundation/Foundation.h>
 #import <libSandy.h>
 #import <rootless.h>
@@ -395,11 +395,11 @@ static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef dat
     return nil;
 }
 
-// CHConstructor {
+CHConstructor {
 
-//     if ([[[NSProcessInfo processInfo] processName] isEqualToString:@"itunesstored"]) {
+    if ([[[NSProcessInfo processInfo] processName] isEqualToString:@"itunesstored"]) {
 
-%ctor {
+// %ctor {
     os_log_info(OS_LOG_DEFAULT, "KbsyncTool loaded");
 
     static CFMessagePortRef localPort = nil;
@@ -435,7 +435,7 @@ static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef dat
     CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopCommonModes);
 
     rocketbootstrap_cfmessageportexposelocal(localPort);
-}
-
-//     }
 // }
+
+    }
+}
