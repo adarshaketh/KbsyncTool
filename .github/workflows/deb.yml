@@ -28,10 +28,10 @@ jobs:
           cp -r include/LightMessaging $THEOS/include/LightMessaging
           cp -f lib/librocketbootstrap.dylib $THEOS/lib/librocketbootstrap.dylib
           rm -f packages/*
-          cp -r layout/Library ./
           cp -f layout/Library/MobileSubstrate/DynamicLibraries/KbsyncTweak.plist ./
           cp -f layout/DEBIAN/control ./
           if [[ ${{matrix.provider}} == rootless ]]; then
+            sed -i'' -e 's/string>\/usr/string>\/var\/jb\/usr/g' kbsynctool/layout/Library/LaunchDaemons/com.darwindev.kbsynctool.plist
             sed -i'' -e 's/iphoneos-arm/iphoneos-arm64/g' control
             make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
           else
