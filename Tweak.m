@@ -1,3 +1,4 @@
+#include <Foundation/NSObjCRuntime.h>
 #import <dlfcn.h>
 #import <mach-o/dyld.h>
 #import <objc/runtime.h>
@@ -341,6 +342,7 @@ static CFDataRef Callback_handleHeaders(CFMessagePortRef port, SInt32 messageID,
     returnDict[@"sbsync"] = sbsyncString;
 
     if (kbsync || sbsync) {
+        NSLog(@"[kbsynctool] Now callback to GCDServer...");
         return (CFDataRef)CFBridgingRetain([NSPropertyListSerialization
             dataWithPropertyList:returnDict
                           format:NSPropertyListBinaryFormat_v1_0
@@ -348,7 +350,7 @@ static CFDataRef Callback_handleHeaders(CFMessagePortRef port, SInt32 messageID,
                            error:nil]);
     }
 
-    NSLog(@"kbsync_result_callback %@", @"error, you should download something in the App Store to init kbsync.");
+    NSLog(@"[kbsynctool] kbsync_result_callback %@", @"error, you should download something in the App Store to init kbsync.");
     return nil;
 }
 
@@ -367,13 +369,13 @@ static CFDataRef Callback_handleSign(CFMessagePortRef port, SInt32 messageID, CF
 
     NSMutableDictionary *returnDict = [NSMutableDictionary dictionary];
 
-    NSLog(@"Start to calc signSap...");
+    NSLog(@"[kbsynctool] Start to calc signSap...");
     AMSMescalSession *session = [NSClassFromString(@"AMSMescalSession") sessionWithType:[mescalType intValue]];
 
     NSError *retError = nil;
     NSData *signature = [session signData:signbody bag:bagDict error:&retError];
     if (retError != nil) {
-        NSLog(@"kbsync_result_callback cannot call [AMSMescalSession signData]: %@", retError);
+        NSLog(@"[kbsynctool] kbsync_result_callback cannot call [AMSMescalSession signData]: %@", retError);
         return nil;
     }
     NSString *signatureString = NSDataToHex(signature);
@@ -388,7 +390,10 @@ static CFDataRef Callback_handleSign(CFMessagePortRef port, SInt32 messageID, CF
 
 static CFDataRef Callback(CFMessagePortRef port, SInt32 messageID, CFDataRef data, void *info) {
     if (messageID == 0x1111) { // kbsynctool's default messageID
-        return Callback_handleHeaders(port, messageID, data, info);
+        CFDataRef result = Callback_handleHeaders(port, messageID, data, info);
+        NSLog(@"[kbsynctool] Got result for callback: [CFDataRef result] %@", result);
+
+        return result;
     } else if (messageID == 0x2222) { // kbsynctool's signature messageID
         return Callback_handleSign(port, messageID, data, info);
     }
