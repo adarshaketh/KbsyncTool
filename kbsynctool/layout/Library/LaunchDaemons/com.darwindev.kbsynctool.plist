@@ -7,11 +7,11 @@
 	<key>ProgramArguments</key>
 	<array>
 	  <string>/usr/local/bin/kbsynctool</string>
-		<string>-s</string>
+		<string>-p</string>
 		<string>9000</string>
 	</array>
 	<key>UserName</key>
-	<string>mobile</string>
+	<string>root</string>
 	<key>POSIXSpawnType</key>
 	<string>Interactive</string>
 	<key>RunAtLoad</key>

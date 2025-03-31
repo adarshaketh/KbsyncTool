@@ -97,8 +97,6 @@ int main(int argc, char *argv[], char *envp[]) {
         // one-time execute
 
         NSString *urlString = [NSString stringWithUTF8String:argv[1]];
-        printf("Try fetch data for %s\n", [urlString UTF8String]);
-
         id returnObj = RocketGetJSONResponse(urlString, @"base64");
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:returnObj options:(NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys) error:nil];
         NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
@@ -115,47 +113,57 @@ int main(int argc, char *argv[], char *envp[]) {
         NSInteger port = [[NSString stringWithUTF8String:argv[2]] integerValue];
         if (port <= 0 || port > 65535) {
             fprintf(stderr, "invalid server port\n");
-		    return 1;
+            return 1;
         }
 
         GCDWebServer *webServer = [[GCDWebServer alloc] init];
         GCDWebServerAsyncProcessBlock webCallback = ^(GCDWebServerRequest *request, GCDWebServerCompletionBlock completionBlock) {
 
-          id returnObj = nil;
-          if ([[[request URL] path] isEqualToString:@"/sign"]) {
-              NSString *bodyString = [request query][@"body"];
-              NSData *body = [[NSData alloc] initWithBase64EncodedString:bodyString options:0];
+            id returnObj = nil;
+            if ([[[request URL] path] isEqualToString:@"/sign"]) {
+                NSString *bodyString = [request query][@"body"];
+                NSData *body = [[NSData alloc] initWithBase64EncodedString:bodyString options:0];
 
-              NSString *mescalTypeString = [request query][@"mescalType"];
-              int mescalType = [mescalTypeString intValue];
+                NSString *mescalTypeString = [request query][@"mescalType"];
+                int mescalType = [mescalTypeString intValue];
 
-              NSString *bagJsonString = [request query][@"bagJson"];
-              NSData *bagJsonData = [bagJsonString dataUsingEncoding:NSUTF8StringEncoding];
-              NSError *error = nil;
-              NSDictionary *bagJson = [NSJSONSerialization JSONObjectWithData:bagJsonData options:0 error:&error];
-              if (error != nil) {
-                  completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid bag json"]);
-                  return;
-              }
+                NSString *bagJsonString = [request query][@"bagJson"];
+                NSData *bagJsonData = [bagJsonString dataUsingEncoding:NSUTF8StringEncoding];
+                NSError *error = nil;
+                NSDictionary *bagJson = [NSJSONSerialization JSONObjectWithData:bagJsonData options:0 error:&error];
+                if (error != nil) {
+                    completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid bag json"]);
+                    return;
+                }
 
-              returnObj = RocketGetJSONResponse2(body, @(mescalType), bagJson);
-              if (!returnObj) {
-                  completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"server error"]);
-                  return;
-              }
-          } else {
-              NSString *urlString = [request query][@"url"];
-              if (!urlString) {
-                  completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
-                  return;
-              }
+                returnObj = RocketGetJSONResponse2(body, @(mescalType), bagJson);
+                if (!returnObj) {
+                    completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"server error"]);
+                    return;
+                }
+            } else {
+                NSString *urlString = [request query][@"url"];
+                if (!urlString) {
+                    completionBlock([GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"invalid url"]);
+                    return;
+                }
 
-              returnObj = RocketGetJSONResponse(urlString, @"hex");
-              if (!returnObj) {
-                  completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"invalid url"]);
-                  return;
-              }
-          }
+                returnObj = RocketGetJSONResponse(urlString, @"hex");
+                if (!returnObj) {
+                    completionBlock([GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError message:@"failed capture data"]);
+                    return;
+                }
+            }
+
+
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:returnObj options:(NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys) error:nil];
+            NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+            if (jsonString) {
+                NSLog(@"%@", jsonString);
+            }
+
+            completionBlock([GCDWebServerDataResponse responseWithData:jsonData contentType:@"application/json"]);
         };
 
         [webServer addDefaultHandlerForMethod:@"GET"
