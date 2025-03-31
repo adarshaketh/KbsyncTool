@@ -4,15 +4,14 @@
 <dict>
 	<key>Label</key>
 	<string>com.darwindev.kbsynctool</string>
-	<key>Program</key>
-	<string>/usr/local/bin/kbsynctool</string>
 	<key>ProgramArguments</key>
 	<array>
+	  <string>/usr/local/bin/kbsynctool</string>
 		<string>-s</string>
 		<string>9000</string>
 	</array>
 	<key>UserName</key>
-	<string>root</string>
+	<string>mobile</string>
 	<key>POSIXSpawnType</key>
 	<string>Interactive</string>
 	<key>RunAtLoad</key>

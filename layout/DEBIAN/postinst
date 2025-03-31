@@ -1,4 +1,8 @@
 #!/bin/sh
 
+echo "[*] Reload kbsync launch..."
+launchctl unload -w /Library/LaunchDaemons/com.darwindev.kbsynctool.plist 2>/dev/null || true
+launchctl load -w /Library/LaunchDaemons/com.darwindev.kbsynctool.plist 2>/dev/null || true
+
 echo "[*] Kill process..."
-killall -9 AppStore; killall -9 itunesstored; killall -9 appstored 2>/dev/null || true
+killall -9 itunesstored; killall -9 appstored; killall -9 AppStore 2>/dev/null || true
